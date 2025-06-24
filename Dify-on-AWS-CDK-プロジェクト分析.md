@@ -346,3 +346,109 @@ export const props: EnvironmentProps = {
 ### その他の設定
 - **CloudFront**: 無効化済み（`useCloudFront: false`）
 - **コスト最適化**: 開発環境向け設定が利用可能
+## 作成されるIAMロール・ポリシー一覧
+
+### 1. ECS Fargate タスクロール（API Service）
+**ロール名**: `DifyOnAwsStack-ApiServiceTask-TaskRole-*`
+
+**付与されるポリシー**:
+- **S3アクセス権限**:
+  - `s3:GetObject*`
+  - `s3:GetBucket*`
+  - `s3:List*`
+  - `s3:DeleteObject*`
+  - `s3:PutObject*`
+  - `s3:Abort*`
+  - 対象: ストレージバケット（[`api.ts:399`](lib/constructs/dify-services/api.ts:399)）
+
+- **Amazon Bedrock権限**:
+  - `bedrock:InvokeModel`
+  - `bedrock:InvokeModelWithResponseStream`
+  - `bedrock:ListFoundationModels`
+  - `bedrock:Rerank`
+  - `bedrock:Retrieve`
+  - `bedrock:RetrieveAndGenerate`
+  - 対象: すべてのリソース（[`api.ts:401-413`](lib/constructs/dify-services/api.ts:401-413)）
+
+- **Secrets Manager読み取り権限**:
+  - PostgreSQL認証情報
+  - Redis認証情報
+  - 暗号化シークレット
+  - SMTP認証情報（Email設定時）
+
+- **SSM Parameter Store読み取り権限**:
+  - Redis Broker URL
+
+### 2. ECS Fargate タスクロール（Web Service）
+**ロール名**: `DifyOnAwsStack-WebServiceTask-TaskRole-*`
+
+**付与されるポリシー**:
+- **Secrets Manager読み取り権限**:
+  - 追加環境変数で指定されたシークレット
+
+### 3. ECS実行ロール
+**ロール名**: `DifyOnAwsStack-*-TaskDefinition-ExecutionRole-*`
+
+**付与されるポリシー**:
+- **AmazonECSTaskExecutionRolePolicy**（AWS管理ポリシー）
+- **CloudWatch Logs書き込み権限**
+- **ECRアクセス権限**（カスタムリポジトリ使用時）
+
+### 4. Aurora PostgreSQL カスタムリソースロール
+**ロール名**: `DifyOnAwsStack-PostgresQuery*-Role-*`
+
+**付与されるポリシー**:
+- **RDS Data API権限**:
+  - `rds-data:ExecuteStatement`
+  - 対象: Aurora PostgreSQLクラスター（[`postgres.ts:119-122`](lib/constructs/postgres.ts:119-122)）
+
+- **Secrets Manager読み取り権限**:
+  - PostgreSQL認証情報
+
+### 5. S3プラグインプレースホルダー作成ロール
+**ロール名**: `DifyOnAwsStack-ApiServiceCreatePluginsPlaceholder-Role-*`
+
+**付与されるポリシー**:
+- **S3書き込み権限**:
+  - `s3:PutObject`
+  - 対象: ストレージバケット（[`api.ts:456-458`](lib/constructs/dify-services/api.ts:456-458)）
+
+### 6. SES SMTP認証情報ロール（Email設定時）
+**ロール名**: `DifyOnAwsStack-EmailSmtpCredentials-User-*`
+
+**付与されるポリシー**:
+- **SES送信権限**:
+  - `ses:SendRawEmail`
+  - `ses:SendEmail`
+  - 対象: 設定されたドメイン
+
+### 7. CloudFront Origin Access Control（CloudFront使用時）
+**ロール名**: CloudFrontのOACによる自動権限付与
+
+**付与されるポリシー**:
+- **S3読み取り権限**:
+  - CloudFrontからALBへのアクセス権限
+
+### 8. VPCエンドポイント用ロール（分離ネットワーク時）
+**ロール名**: 各種VPCエンドポイント用の自動生成ロール
+
+**付与されるポリシー**:
+- **各AWSサービスへのアクセス権限**:
+  - ECR、S3、Secrets Manager、SSM、CloudWatch Logs等
+
+## セキュリティ考慮事項
+
+### 最小権限の原則
+- 各ロールは必要最小限の権限のみを付与
+- リソース固有のARNを指定（可能な場合）
+- 時間制限付きの一時的な認証情報を使用
+
+### 暗号化
+- すべてのシークレットはSecrets Managerで暗号化保存
+- S3バケットは暗号化強制（`enforceSSL: true`）
+- RDS/ElastiCacheは保存時暗号化有効
+
+### ネットワークセキュリティ
+- ECSタスクはプライベートサブネットで実行
+- セキュリティグループによる通信制限
+- VPCエンドポイント使用による内部通信
