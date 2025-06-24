@@ -5,7 +5,12 @@ import { ManagedPolicy } from 'aws-cdk-lib/aws-iam';
 import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 
 const app = new cdk.App();
+
+// すべてのリソースに共通タグを付与
+cdk.Tags.of(app).add('app', 'dify-on-aws');
+
 const stack = new cdk.Stack(app, 'DeployStack', {
+  env: { region: 'ap-northeast-1' },
   description: 'A stack to deploy Dify-on-AWS resources from CloudShell.',
   synthesizer: new cdk.DefaultStackSynthesizer({
     generateBootstrapVersionRule: false,

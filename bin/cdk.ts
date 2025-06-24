@@ -6,13 +6,13 @@ import { UsEast1Stack } from '../lib/us-east-1-stack';
 import { EnvironmentProps } from '../lib/environment-props';
 
 export const props: EnvironmentProps = {
-  awsRegion: 'us-west-2',
+  awsRegion: 'ap-northeast-1',
   awsAccount: process.env.CDK_DEFAULT_ACCOUNT!,
   // Set Dify version
   difyImageTag: '1.4.3',
   // Set plugin-daemon version to stable release
   difyPluginDaemonImageTag: '0.1.2-local',
-
+  useCloudFront:false,
   // uncomment the below options for less expensive configuration:
   // isRedisMultiAz: false,
   // useNatInstance: true,
@@ -23,6 +23,9 @@ export const props: EnvironmentProps = {
 };
 
 const app = new cdk.App();
+
+// すべてのリソースに共通タグを付与
+cdk.Tags.of(app).add('app', 'dify-on-aws');
 
 let virginia: UsEast1Stack | undefined = undefined;
 if ((props.useCloudFront ?? true) && (props.domainName || props.allowedIPv4Cidrs || props.allowedIPv6Cidrs)) {

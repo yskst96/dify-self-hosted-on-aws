@@ -33,6 +33,24 @@
 - S3 ソースバケット
 - CloudWatch ロググループ
 
+**特別な用途**: [`package.json`](package.json:10)の`synth`スクリプトで使用される
+```bash
+npm run synth
+```
+このスクリプトは以下のコマンドを実行します：
+```bash
+cdk -a 'npx ts-node --prefer-ts-exts bin/deploy.ts' --version-reporting false --path-metadata false synth > deploy.yaml
+```
+
+**コマンドの詳細解説**:
+- `cdk synth`: CDKテンプレートをCloudFormation YAMLに変換
+- `-a 'npx ts-node --prefer-ts-exts bin/deploy.ts'`: アプリケーションエントリーポイントを[`bin/deploy.ts`](bin/deploy.ts:1)に指定
+- `--version-reporting false`: CDKバージョン情報の送信を無効化
+- `--path-metadata false`: パスメタデータの埋め込みを無効化
+- `> deploy.yaml`: 出力をdeploy.yamlファイルにリダイレクト
+
+**用途**: CloudShellなどの制限された環境でのデプロイメント用CloudFormationテンプレート生成
+
 ## /lib ディレクトリ
 
 ### メインスタック
@@ -75,7 +93,7 @@
 
 ```typescript
 export const props: EnvironmentProps = {
-  awsRegion: 'us-west-2',
+  awsRegion: 'ap-northeast-1',
   awsAccount: process.env.CDK_DEFAULT_ACCOUNT!,
   difyImageTag: '1.4.3',
   difyPluginDaemonImageTag: '0.1.2-local',
@@ -132,7 +150,7 @@ export const props: EnvironmentProps = {
 
 ```typescript
 export const props: EnvironmentProps = {
-  awsRegion: 'us-west-2',
+  awsRegion: 'ap-northeast-1',
   awsAccount: process.env.CDK_DEFAULT_ACCOUNT!,
   difyImageTag: '1.4.3',
   difyPluginDaemonImageTag: '0.1.2-local',
@@ -263,7 +281,7 @@ const alb = useCloudFront
 ### 最小構成（開発環境向け）
 ```typescript
 export const props: EnvironmentProps = {
-  awsRegion: 'us-west-2',
+  awsRegion: 'ap-northeast-1',
   awsAccount: process.env.CDK_DEFAULT_ACCOUNT!,
   difyImageTag: '1.4.3',
   difyPluginDaemonImageTag: '0.1.2-local',
@@ -280,7 +298,7 @@ export const props: EnvironmentProps = {
 ### 本番環境向け（カスタムドメイン付き）
 ```typescript
 export const props: EnvironmentProps = {
-  awsRegion: 'us-west-2',
+  awsRegion: 'ap-northeast-1',
   awsAccount: process.env.CDK_DEFAULT_ACCOUNT!,
   difyImageTag: '1.4.3',
   difyPluginDaemonImageTag: '0.1.2-local',
@@ -312,3 +330,19 @@ export const props: EnvironmentProps = {
 ```
 
 このCDKプロジェクトにより、用途に応じて柔軟にカスタマイズされたDifyインスタンスをAWS上に構築できます。
+## 実装済み設定
+
+### リージョン設定
+- **デプロイリージョン**: 東京リージョン（ap-northeast-1）
+- [`bin/cdk.ts`](bin/cdk.ts:9): `awsRegion: 'ap-northeast-1'`
+- [`bin/deploy.ts`](bin/deploy.ts:12): `env: { region: 'ap-northeast-1' }`
+
+### タグ設定
+- **共通タグ**: `app: dify-on-aws`
+- すべてのAWSリソースに自動付与
+- [`bin/cdk.ts`](bin/cdk.ts:28): `cdk.Tags.of(app).add('app', 'dify-on-aws')`
+- [`bin/deploy.ts`](bin/deploy.ts:10): `cdk.Tags.of(app).add('app', 'dify-on-aws')`
+
+### その他の設定
+- **CloudFront**: 無効化済み（`useCloudFront: false`）
+- **コスト最適化**: 開発環境向け設定が利用可能
