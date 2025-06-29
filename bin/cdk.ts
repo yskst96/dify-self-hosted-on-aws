@@ -14,19 +14,18 @@ export const props: EnvironmentProps = {
   difyPluginDaemonImageTag: '0.1.2-local',
   useCloudFront:false,
   setupEmail:false,
+  useNatInstance:false,
+  enableAuroraScalesToZero: true,
   // uncomment the below options for less expensive configuration:
   // isRedisMultiAz: false,
-  // useNatInstance: true,
-  enableAuroraScalesToZero: true,
   // useFargateSpot: true,
-
   // Please see EnvironmentProps in lib/environment-props.ts for all the available properties
 };
 
 const app = new cdk.App();
 
 // すべてのリソースに共通タグを付与
-cdk.Tags.of(app).add('app', 'dify-on-aws');
+cdk.Tags.of(app).add('app', 'dify-on-aws-sata');
 
 let virginia: UsEast1Stack | undefined = undefined;
 if ((props.useCloudFront ?? true) && (props.domainName || props.allowedIPv4Cidrs || props.allowedIPv6Cidrs)) {
@@ -40,7 +39,7 @@ if ((props.useCloudFront ?? true) && (props.domainName || props.allowedIPv4Cidrs
   });
 }
 
-new DifyOnAwsStack(app, 'DifyOnAwsStack', {
+new DifyOnAwsStack(app, 'DifyOnAwsStack-sata', {
   env: { region: props.awsRegion, account: props.awsAccount },
   crossRegionReferences: true,
   ...props,
