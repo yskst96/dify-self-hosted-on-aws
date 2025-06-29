@@ -13,11 +13,11 @@ export const props: EnvironmentProps = {
   // Set plugin-daemon version to stable release
   difyPluginDaemonImageTag: '0.1.2-local',
   useCloudFront:false,
-  setupEmail:false
+  setupEmail:false,
   // uncomment the below options for less expensive configuration:
   // isRedisMultiAz: false,
   // useNatInstance: true,
-  // enableAuroraScalesToZero: true,
+  enableAuroraScalesToZero: true,
   // useFargateSpot: true,
 
   // Please see EnvironmentProps in lib/environment-props.ts for all the available properties
